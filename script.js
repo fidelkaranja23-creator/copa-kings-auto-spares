@@ -235,7 +235,7 @@ const additionalPartNames = {
   161: 'HYA Pneumatic Parts Set',
   162: 'Truck Pneumatic Valve Set',
   163: 'WABCO Air Protection Assembly',
-  164: 'Diesel Tank Cap',
+  164: 'Diesel Tank Cap  & "C:\Program Files\Git\cmd\git.exe" push -u origin main',
   165: 'Truck Front Axle and Brake Assembly',
   166: 'Truck Cab',
   167: 'Truck Mirror and Body Hardware',
