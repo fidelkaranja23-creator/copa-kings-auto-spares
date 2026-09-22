@@ -287,6 +287,7 @@ const lightboxImageWrap = document.getElementById('lightboxImageWrap');
 const zoomLevel = document.getElementById('zoomLevel');
 let currentZoom = 1;
 let cart = JSON.parse(localStorage.getItem('copaKingsCart') || '{}');
+let cartRequests = JSON.parse(localStorage.getItem('copaKingsCartRequests') || '{}');
 
 const categoryNames = [...new Set(products.map((product) => product.category))].sort();
 categoryNames.forEach((category) => {
@@ -324,31 +325,54 @@ function closeLightbox() {
 
 function updateQuoteTray() {
   const selectedProducts = products.filter((product) => cart[product.image]);
-  const totalItems = selectedProducts.reduce((total, product) => total + cart[product.image], 0);
+  const selectedRequests = Object.entries(cartRequests)
+    .filter(([key]) => cart[key])
+    .map(([key, name]) => ({ key, name }));
+  const totalItems = selectedProducts.reduce((total, product) => total + cart[product.image], 0)
+    + selectedRequests.reduce((total, request) => total + cart[request.key], 0);
   quoteCount.textContent = totalItems;
   quoteLabel.textContent = totalItems === 1 ? 'item' : 'items';
-  quoteTray.hidden = selectedProducts.length === 0;
-  cartItems.innerHTML = selectedProducts.map((product) => `
+  quoteTray.hidden = selectedProducts.length === 0 && selectedRequests.length === 0;
+  const cartEntries = selectedProducts.map((product) => ({
+    key: product.image,
+    name: product.name,
+    quantity: cart[product.image]
+  })).concat(selectedRequests.map((request) => ({
+    key: request.key,
+    name: `${request.name} (request)`,
+    quantity: cart[request.key]
+  })));
+  cartItems.innerHTML = cartEntries.map((item) => `
     <div class="cart-item">
-      <span>${product.name}</span>
+      <span>${item.name}</span>
       <div class="cart-item-controls">
-        <button type="button" data-cart-decrease="${product.image}" aria-label="Decrease ${product.name}">-</button>
-        <strong>${cart[product.image]}</strong>
-        <button type="button" data-cart-increase="${product.image}" aria-label="Increase ${product.name}">+</button>
-        <button type="button" class="cart-remove" data-cart-remove="${product.image}" aria-label="Remove ${product.name}">&times;</button>
+        <button type="button" data-cart-decrease="${encodeURIComponent(item.key)}" aria-label="Decrease ${item.name}">-</button>
+        <strong>${item.quantity}</strong>
+        <button type="button" data-cart-increase="${encodeURIComponent(item.key)}" aria-label="Increase ${item.name}">+</button>
+        <button type="button" class="cart-remove" data-cart-remove="${encodeURIComponent(item.key)}" aria-label="Remove ${item.name}">&times;</button>
       </div>
     </div>
   `).join('');
-  const message = selectedProducts.length
-    ? `Hello, I would like to order:\n${selectedProducts.map((product) => `- ${product.name} x${cart[product.image]}`).join('\n')}`
+  const message = cartEntries.length
+    ? `Hello, I would like to order:\n${cartEntries.map((item) => `- ${item.name} x${item.quantity}`).join('\n')}`
     : 'Hello, I would like help finding truck spare parts.';
   sendQuote.href = `https://wa.me/254725274338?text=${encodeURIComponent(message)}`;
   localStorage.setItem('copaKingsCart', JSON.stringify(cart));
+  localStorage.setItem('copaKingsCartRequests', JSON.stringify(cartRequests));
 }
 
 function toggleCartItem(image) {
   cart[image] = cart[image] ? 0 : 1;
   if (!cart[image]) delete cart[image];
+  updateQuoteTray();
+  renderProducts(getFilteredProducts());
+}
+
+function addRequestToCart(requestName) {
+  const trimmedName = requestName.trim() || 'Part to be confirmed';
+  const key = `request:${trimmedName.toLowerCase()}`;
+  cartRequests[key] = trimmedName;
+  cart[key] = (cart[key] || 0) + 1;
   updateQuoteTray();
   renderProducts(getFilteredProducts());
 }
@@ -359,6 +383,8 @@ function renderProducts(filteredProducts) {
 
   if (!filteredProducts.length) {
     const query = searchInput.value.trim();
+    const requestKey = `request:${query.toLowerCase()}`;
+    const requestInCart = Boolean(cart[requestKey]);
     const requestCard = document.createElement('article');
     requestCard.className = 'product-card search-request-card';
     requestCard.innerHTML = `
@@ -366,15 +392,17 @@ function renderProducts(filteredProducts) {
         <p class="product-brand">Part not listed</p>
         <h3 class="product-name"></h3>
         <p class="about-copy">Send us the part name and we will check availability for your truck.</p>
-        <a class="product-link" target="_blank" rel="noreferrer">Request this part</a>
+        <button class="request-cart-button" type="button" ${requestInCart ? 'disabled' : ''}>
+          ${requestInCart ? 'Request in cart' : 'Add request to cart'}
+        </button>
       </div>
     `;
     requestCard.querySelector('.product-name').textContent = query
       ? `Looking for: ${query}`
       : 'Tell us which truck part you need';
-    requestCard.querySelector('.product-link').href = `https://wa.me/254725274338?text=${encodeURIComponent(
-      `Hello, I am looking for this truck part: ${query || 'Please help me find a part'}`
-    )}`;
+    requestCard.querySelector('.request-cart-button').addEventListener('click', () => {
+      addRequestToCart(query || 'Part to be confirmed');
+    });
     productGrid.appendChild(requestCard);
   }
 
@@ -459,7 +487,8 @@ quoteTray.addEventListener('click', (event) => {
   const increase = event.target.closest('[data-cart-increase]');
   const decrease = event.target.closest('[data-cart-decrease]');
   const remove = event.target.closest('[data-cart-remove]');
-  const image = increase?.dataset.cartIncrease || decrease?.dataset.cartDecrease || remove?.dataset.cartRemove;
+  const encodedImage = increase?.dataset.cartIncrease || decrease?.dataset.cartDecrease || remove?.dataset.cartRemove;
+  const image = encodedImage ? decodeURIComponent(encodedImage) : '';
   if (!image) return;
   if (remove || decrease && cart[image] === 1) {
     delete cart[image];
@@ -474,6 +503,7 @@ quoteTray.addEventListener('click', (event) => {
 
 clearQuote.addEventListener('click', () => {
   cart = {};
+  cartRequests = {};
   updateQuoteTray();
   renderProducts(getFilteredProducts());
 });
