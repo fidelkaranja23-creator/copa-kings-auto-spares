@@ -237,7 +237,7 @@ const additionalPartNames = {
   163: 'WABCO Air Protection Assembly',
   164: 'Diesel Tank Cap  & "C:\Program Files\Git\cmd\git.exe" push -u origin main',
   165: 'Truck Front Axle and Brake Assembly',
-  166: 'Truck Cab',
+  166: 'Truck Cabin',
   167: 'Truck Mirror and Body Hardware',
   168: 'Truck Control Cables',
   169: 'Truck Propeller Shaft',
