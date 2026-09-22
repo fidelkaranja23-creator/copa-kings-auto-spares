@@ -273,11 +273,27 @@ const productGrid = document.getElementById('productGrid');
 const searchForm = document.getElementById('searchForm');
 const searchInput = document.getElementById('searchInput');
 const resultsCount = document.getElementById('resultsCount');
+const categoryFilter = document.getElementById('categoryFilter');
+const sortFilter = document.getElementById('sortFilter');
+const quoteTray = document.getElementById('quoteTray');
+const quoteCount = document.getElementById('quoteCount');
+const quoteLabel = document.getElementById('quoteLabel');
+const clearQuote = document.getElementById('clearQuote');
+const sendQuote = document.getElementById('sendQuote');
 const imageLightbox = document.getElementById('imageLightbox');
 const lightboxImage = document.getElementById('lightboxImage');
 const lightboxImageWrap = document.getElementById('lightboxImageWrap');
 const zoomLevel = document.getElementById('zoomLevel');
 let currentZoom = 1;
+let quoteItems = JSON.parse(localStorage.getItem('copaKingsQuote') || '[]');
+
+const categoryNames = [...new Set(products.map((product) => product.category))].sort();
+categoryNames.forEach((category) => {
+  const option = document.createElement('option');
+  option.value = category;
+  option.textContent = category;
+  categoryFilter.appendChild(option);
+});
 
 function updateZoom() {
   lightboxImage.style.transform = `scale(${currentZoom})`;
@@ -305,8 +321,29 @@ function closeLightbox() {
   lightboxImage.removeAttribute('src');
 }
 
+function updateQuoteTray() {
+  const selectedProducts = products.filter((product) => quoteItems.includes(product.image));
+  quoteCount.textContent = selectedProducts.length;
+  quoteLabel.textContent = selectedProducts.length === 1 ? 'part' : 'parts';
+  quoteTray.hidden = selectedProducts.length === 0;
+  const message = selectedProducts.length
+    ? `Hello, I would like a quote for:\n${selectedProducts.map((product) => `- ${product.name}`).join('\n')}`
+    : 'Hello, I would like help finding truck spare parts.';
+  sendQuote.href = `https://wa.me/254725274338?text=${encodeURIComponent(message)}`;
+  localStorage.setItem('copaKingsQuote', JSON.stringify(quoteItems));
+}
+
+function toggleQuoteItem(image) {
+  quoteItems = quoteItems.includes(image)
+    ? quoteItems.filter((item) => item !== image)
+    : [...quoteItems, image];
+  updateQuoteTray();
+  renderProducts(getFilteredProducts());
+}
+
 function renderProducts(filteredProducts) {
   productGrid.innerHTML = '';
+  resultsCount.textContent = `${filteredProducts.length} part${filteredProducts.length === 1 ? '' : 's'} shown`;
 
   if (!filteredProducts.length) {
     const query = searchInput.value.trim();
@@ -348,7 +385,12 @@ function renderProducts(filteredProducts) {
         <h3 class="product-name">${product.name}</h3>
         <div class="product-meta">
           <span class="product-tag">${product.tag}</span>
-          <a class="product-link" href="https://wa.me/254725274338?text=${encodeURIComponent('Hello, I need this item: ' + product.name)}" target="_blank" rel="noreferrer">Order</a>
+          <div class="product-actions">
+            <button class="quote-button" type="button" aria-pressed="${quoteItems.includes(product.image)}">
+              ${quoteItems.includes(product.image) ? 'Added' : 'Add to quote'}
+            </button>
+            <a class="product-link" href="https://wa.me/254725274338?text=${encodeURIComponent('Hello, I need this item: ' + product.name)}" target="_blank" rel="noreferrer">Order</a>
+          </div>
         </div>
       </div>
     `;
@@ -356,19 +398,17 @@ function renderProducts(filteredProducts) {
     card.querySelector('.product-image-button').addEventListener('click', (event) => {
       openLightbox(event.currentTarget.querySelector('img'));
     });
+    card.querySelector('.quote-button').addEventListener('click', () => {
+      toggleQuoteItem(product.image);
+    });
     productGrid.appendChild(card);
   });
 
 }
 
-function searchProducts(query) {
-  const normalized = query.trim().toLowerCase();
-
-  if (!normalized) {
-    renderProducts(products);
-    return;
-  }
-
+function getFilteredProducts() {
+  const normalized = searchInput.value.trim().toLowerCase();
+  const selectedCategory = categoryFilter.value;
   const filtered = products.filter((product) => {
     const searchableText = [
       product.name,
@@ -377,19 +417,36 @@ function searchProducts(query) {
       product.tag
     ].join(' ').toLowerCase();
 
-    return searchableText.includes(normalized);
+    return searchableText.includes(normalized)
+      && (selectedCategory === 'all' || product.category === selectedCategory);
   });
 
-  renderProducts(filtered);
+  if (sortFilter.value === 'name') {
+    filtered.sort((first, second) => first.name.localeCompare(second.name));
+  } else if (sortFilter.value === 'category') {
+    filtered.sort((first, second) => first.category.localeCompare(second.category));
+  }
+
+  return filtered;
+}
+
+function searchProducts() {
+  renderProducts(getFilteredProducts());
 }
 
 searchForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  searchProducts(searchInput.value);
+  searchProducts();
 });
 
-searchInput.addEventListener('input', (event) => {
-  searchProducts(event.target.value);
+searchInput.addEventListener('input', searchProducts);
+categoryFilter.addEventListener('change', searchProducts);
+sortFilter.addEventListener('change', searchProducts);
+
+clearQuote.addEventListener('click', () => {
+  quoteItems = [];
+  updateQuoteTray();
+  renderProducts(getFilteredProducts());
 });
 
 imageLightbox.addEventListener('click', (event) => {
@@ -431,4 +488,5 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
+updateQuoteTray();
 renderProducts(products);

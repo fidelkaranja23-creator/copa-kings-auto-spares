@@ -110,6 +110,22 @@
             />
             <button type="submit" class="btn btn-primary">Search</button>
           </form>
+          <div class="catalog-controls" aria-label="Inventory filters">
+            <label>
+              <span>Category</span>
+              <select id="categoryFilter">
+                <option value="all">All categories</option>
+              </select>
+            </label>
+            <label>
+              <span>Sort</span>
+              <select id="sortFilter">
+                <option value="recommended">Recommended</option>
+                <option value="name">Name A-Z</option>
+                <option value="category">Category</option>
+              </select>
+            </label>
+          </div>
         </div>
       </section>
 
@@ -120,6 +136,7 @@
               <p class="eyebrow">Our inventory</p>
               <h2>Available spare parts</h2>
             </div>
+            <p class="results-count" id="resultsCount" aria-live="polite"></p>
           </div>
 
           <div id="productGrid" class="product-grid" aria-live="polite"></div>
@@ -169,6 +186,17 @@
         </div>
       </section>
     </main>
+
+    <aside class="quote-tray" id="quoteTray" aria-live="polite" hidden>
+      <div>
+        <strong><span id="quoteCount">0</span> <span id="quoteLabel">parts</span> selected</strong>
+        <span class="quote-hint">Send one enquiry for several items</span>
+      </div>
+      <div class="quote-actions">
+        <button class="quote-clear" id="clearQuote" type="button">Clear</button>
+        <a class="btn btn-primary" id="sendQuote" href="#" target="_blank" rel="noreferrer">Send enquiry</a>
+      </div>
+    </aside>
 
     <footer id="contact" class="site-footer">
       <div class="container footer-wrap">
