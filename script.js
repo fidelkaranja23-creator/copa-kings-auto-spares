@@ -278,6 +278,7 @@ const sortFilter = document.getElementById('sortFilter');
 const quoteTray = document.getElementById('quoteTray');
 const quoteCount = document.getElementById('quoteCount');
 const quoteLabel = document.getElementById('quoteLabel');
+const cartItems = document.getElementById('cartItems');
 const clearQuote = document.getElementById('clearQuote');
 const sendQuote = document.getElementById('sendQuote');
 const imageLightbox = document.getElementById('imageLightbox');
@@ -285,7 +286,7 @@ const lightboxImage = document.getElementById('lightboxImage');
 const lightboxImageWrap = document.getElementById('lightboxImageWrap');
 const zoomLevel = document.getElementById('zoomLevel');
 let currentZoom = 1;
-let quoteItems = JSON.parse(localStorage.getItem('copaKingsQuote') || '[]');
+let cart = JSON.parse(localStorage.getItem('copaKingsCart') || '{}');
 
 const categoryNames = [...new Set(products.map((product) => product.category))].sort();
 categoryNames.forEach((category) => {
@@ -322,21 +323,32 @@ function closeLightbox() {
 }
 
 function updateQuoteTray() {
-  const selectedProducts = products.filter((product) => quoteItems.includes(product.image));
-  quoteCount.textContent = selectedProducts.length;
-  quoteLabel.textContent = selectedProducts.length === 1 ? 'part' : 'parts';
+  const selectedProducts = products.filter((product) => cart[product.image]);
+  const totalItems = selectedProducts.reduce((total, product) => total + cart[product.image], 0);
+  quoteCount.textContent = totalItems;
+  quoteLabel.textContent = totalItems === 1 ? 'item' : 'items';
   quoteTray.hidden = selectedProducts.length === 0;
+  cartItems.innerHTML = selectedProducts.map((product) => `
+    <div class="cart-item">
+      <span>${product.name}</span>
+      <div class="cart-item-controls">
+        <button type="button" data-cart-decrease="${product.image}" aria-label="Decrease ${product.name}">-</button>
+        <strong>${cart[product.image]}</strong>
+        <button type="button" data-cart-increase="${product.image}" aria-label="Increase ${product.name}">+</button>
+        <button type="button" class="cart-remove" data-cart-remove="${product.image}" aria-label="Remove ${product.name}">&times;</button>
+      </div>
+    </div>
+  `).join('');
   const message = selectedProducts.length
-    ? `Hello, I would like a quote for:\n${selectedProducts.map((product) => `- ${product.name}`).join('\n')}`
+    ? `Hello, I would like to order:\n${selectedProducts.map((product) => `- ${product.name} x${cart[product.image]}`).join('\n')}`
     : 'Hello, I would like help finding truck spare parts.';
   sendQuote.href = `https://wa.me/254725274338?text=${encodeURIComponent(message)}`;
-  localStorage.setItem('copaKingsQuote', JSON.stringify(quoteItems));
+  localStorage.setItem('copaKingsCart', JSON.stringify(cart));
 }
 
-function toggleQuoteItem(image) {
-  quoteItems = quoteItems.includes(image)
-    ? quoteItems.filter((item) => item !== image)
-    : [...quoteItems, image];
+function toggleCartItem(image) {
+  cart[image] = cart[image] ? 0 : 1;
+  if (!cart[image]) delete cart[image];
   updateQuoteTray();
   renderProducts(getFilteredProducts());
 }
@@ -386,8 +398,8 @@ function renderProducts(filteredProducts) {
         <div class="product-meta">
           <span class="product-tag">${product.tag}</span>
           <div class="product-actions">
-            <button class="quote-button" type="button" aria-pressed="${quoteItems.includes(product.image)}">
-              ${quoteItems.includes(product.image) ? 'Added' : 'Add to quote'}
+            <button class="quote-button" type="button" aria-pressed="${Boolean(cart[product.image])}">
+              ${cart[product.image] ? 'In cart' : 'Add to cart'}
             </button>
             <a class="product-link" href="https://wa.me/254725274338?text=${encodeURIComponent('Hello, I need this item: ' + product.name)}" target="_blank" rel="noreferrer">Order</a>
           </div>
@@ -399,7 +411,7 @@ function renderProducts(filteredProducts) {
       openLightbox(event.currentTarget.querySelector('img'));
     });
     card.querySelector('.quote-button').addEventListener('click', () => {
-      toggleQuoteItem(product.image);
+      toggleCartItem(product.image);
     });
     productGrid.appendChild(card);
   });
@@ -443,8 +455,25 @@ searchInput.addEventListener('input', searchProducts);
 categoryFilter.addEventListener('change', searchProducts);
 sortFilter.addEventListener('change', searchProducts);
 
+quoteTray.addEventListener('click', (event) => {
+  const increase = event.target.closest('[data-cart-increase]');
+  const decrease = event.target.closest('[data-cart-decrease]');
+  const remove = event.target.closest('[data-cart-remove]');
+  const image = increase?.dataset.cartIncrease || decrease?.dataset.cartDecrease || remove?.dataset.cartRemove;
+  if (!image) return;
+  if (remove || decrease && cart[image] === 1) {
+    delete cart[image];
+  } else if (increase) {
+    cart[image] += 1;
+  } else if (decrease) {
+    cart[image] -= 1;
+  }
+  updateQuoteTray();
+  renderProducts(getFilteredProducts());
+});
+
 clearQuote.addEventListener('click', () => {
-  quoteItems = [];
+  cart = {};
   updateQuoteTray();
   renderProducts(getFilteredProducts());
 });
