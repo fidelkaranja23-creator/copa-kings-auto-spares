@@ -202,7 +202,7 @@ const additionalPartNames = {
   119: 'Truck Air Filter',
   120: 'Truck King Pins',
   121: 'Diesel Fuel Injection Pump',
-  122: 'Truck Fuel Filters',
+  122: 'Truck Speed Sensor',
   123: 'Truck Door Handles and Locks',
   124: 'Shacman Engine Oil Pump',
   125: 'Truck Fan Belt',
