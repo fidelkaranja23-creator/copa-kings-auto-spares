@@ -82,7 +82,14 @@ const availableProductImages = new Set([
   'IMG-20260217-WA0182.jpg',
   'IMG-20260217-WA0183.jpg',
   'IMG-20260217-WA0184.jpg',
-  'IMG-20260217-WA0185.jpg'
+  'IMG-20260217-WA0185.jpg',
+  'IMG-20260921-WA0003.jpg',
+  'IMG-20260921-WA0004.jpg',
+  'IMG-20260921-WA0005.jpg',
+  'IMG-20260921-WA0006.jpg',
+  'IMG-20260921-WA0008.jpg',
+  'IMG-20260921-WA0010.jpg',
+  'IMG-20260921-WA0011.jpg'
 ]);
 
 const products = [
@@ -235,7 +242,7 @@ const additionalPartNames = {
   161: 'HYA Pneumatic Parts Set',
   162: 'Truck Pneumatic Valve Set',
   163: 'WABCO Air Protection Assembly',
-  164: 'Diesel Tank Cap  & "C:\Program Files\Git\cmd\git.exe" push -u origin main',
+  164: 'Diesel Tank Cap',
   165: 'Truck Front Axle and Brake Assembly',
   166: 'Truck Cabin',
   167: 'Truck Mirror and Body Hardware',
@@ -256,8 +263,27 @@ const additionalPartNames = {
   182: 'Truck Mounting Bolts',
   183: 'Truck Belt Tensioner',
   184: 'Truck Spring Hanger Shackle',
-  185: 'Diesel Fuel Injection Pump Set'
+  185: 'Diesel Fuel Injection Pump Set',
+  3: 'Top Oil General Purpose Grease',
+  4: 'Stanley Hydraulic Oil ISO 68',
+  5: 'Stanley Hydraulic Oil ISO 68',
+  6: 'HASS Gold Ultra Diesel Engine Oil',
+  8: 'Teson Multipurpose Grease',
+  10: 'Power Eagle Multipurpose Base Grease',
+  11: 'Power Eagle Multipurpose Base Grease'
 };
+
+const newlyAddedProductImages = [
+  { image: 'IMG-20260921-WA0003.jpg', name: 'Top Oil General Purpose Grease', category: 'Lubricants', tag: 'Available' },
+  { image: 'IMG-20260921-WA0004.jpg', name: 'Stanley Hydraulic Oil ISO 68', category: 'Lubricants', tag: 'Available' },
+  { image: 'IMG-20260921-WA0005.jpg', name: 'Stanley Hydraulic Oil ISO 68', category: 'Lubricants', tag: 'Available' },
+  { image: 'IMG-20260921-WA0006.jpg', name: 'HASS Gold Ultra Diesel Engine Oil', category: 'Lubricants', tag: 'Available' },
+  { image: 'IMG-20260921-WA0008.jpg', name: 'Teson Multipurpose Grease', category: 'Lubricants', tag: 'Available' },
+  { image: 'IMG-20260921-WA0010.jpg', name: 'Power Eagle Multipurpose Base Grease', category: 'Lubricants', tag: 'Available' },
+  { image: 'IMG-20260921-WA0011.jpg', name: 'Power Eagle Multipurpose Base Grease', category: 'Lubricants', tag: 'Available' }
+].filter((product) => availableProductImages.has(product.image));
+
+products.push(...newlyAddedProductImages);
 
 products.push(...additionalPhotos
   .filter((image) => availableProductImages.has(image))
