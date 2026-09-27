@@ -195,7 +195,7 @@ const additionalPartNames = {
   100: 'Truck Wiper Motor Assembly',
   113: 'Truck Engine Overhaul Kit',
   114: 'Tata Genuine Filter Set',
-  115: 'Truck Mesh Air Intake Filter',
+  115: 'Gear Synchronizers',
   116: 'Pneumatic Control Valves',
   117: 'Truck Window Regulator Assembly',
   118: 'Truck Door Lock and Latch Parts',
@@ -213,7 +213,7 @@ const additionalPartNames = {
   131: 'Heavy Duty Truck Air Filter',
   133: 'FAW Truck Spare Part',
   134: 'Tata Genuine Spare Part',
-  135: 'Commercial Truck Spare Parts Set',
+  135: 'Commercial Truck Spare Parts',
   136: 'Truck Torque Rod',
   137: 'Truck Alternator',
   138: 'King Pin Repair Kit',
@@ -270,7 +270,7 @@ const additionalPartNames = {
   6: 'HASS Gold Ultra Diesel Engine Oil',
   8: 'Teson Multipurpose Grease',
   10: 'Power Eagle Multipurpose Base Grease',
-  11: 'Power Eagle Multipurpose Base Grease'
+  11: 'Engine Oil'
 };
 
 const newlyAddedProductImages = [
@@ -280,7 +280,7 @@ const newlyAddedProductImages = [
   { image: 'IMG-20260921-WA0006.jpg', name: 'HASS Gold Ultra Diesel Engine Oil', category: 'Lubricants', tag: 'Available' },
   { image: 'IMG-20260921-WA0008.jpg', name: 'Teson Multipurpose Grease', category: 'Lubricants', tag: 'Available' },
   { image: 'IMG-20260921-WA0010.jpg', name: 'Power Eagle Multipurpose Base Grease', category: 'Lubricants', tag: 'Available' },
-  { image: 'IMG-20260921-WA0011.jpg', name: 'Power Eagle Multipurpose Base Grease', category: 'Lubricants', tag: 'Available' }
+  { image: 'IMG-20260921-WA0011.jpg', name: 'Engine Oil', category: 'Lubricants', tag: 'Available' }
 ].filter((product) => availableProductImages.has(product.image));
 
 products.push(...newlyAddedProductImages);
@@ -290,7 +290,7 @@ products.push(...additionalPhotos
   .map((image, index) => ({
     name: additionalPartNames[Number(image.match(/WA(\d+)\.jpg$/)[1])] || `Part ${index + 13}`,
     brand: '',
-    category: 'Truck parts',
+    category: 'Truck Spares',
     tag: 'Available',
     image
   })));
@@ -327,7 +327,7 @@ const categoryOrder = {
   Steering: 7,
   Suspension: 8,
   Transmission: 9,
-  'Truck parts': 10
+  'Truck Spares': 10
 };
 
 const categoryNames = [...new Set(products.map((product) => product.category))].sort((first, second) => {
@@ -462,7 +462,9 @@ function renderFeaturedGallery() {
 
 function renderProducts(filteredProducts) {
   productGrid.innerHTML = '';
-  resultsCount.textContent = `${filteredProducts.length} part${filteredProducts.length === 1 ? '' : 's'} shown`;
+  resultsCount.textContent = filteredProducts.length
+    ? 'Available parts'
+    : 'No parts match your search';
 
   if (!filteredProducts.length) {
     const query = searchInput.value.trim();
