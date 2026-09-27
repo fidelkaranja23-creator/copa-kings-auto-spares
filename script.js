@@ -296,6 +296,7 @@ products.push(...additionalPhotos
   })));
 
 const productGrid = document.getElementById('productGrid');
+const featuredGallery = document.getElementById('featuredGallery');
 const searchForm = document.getElementById('searchForm');
 const searchInput = document.getElementById('searchInput');
 const resultsCount = document.getElementById('resultsCount');
@@ -315,7 +316,25 @@ let currentZoom = 1;
 let cart = JSON.parse(localStorage.getItem('copaKingsCart') || '{}');
 let cartRequests = JSON.parse(localStorage.getItem('copaKingsCartRequests') || '{}');
 
-const categoryNames = [...new Set(products.map((product) => product.category))].sort();
+const categoryOrder = {
+  Lubricants: 0,
+  'Air System': 1,
+  Braking: 2,
+  Electrical: 3,
+  Engine: 4,
+  Filters: 5,
+  Lighting: 6,
+  Steering: 7,
+  Suspension: 8,
+  Transmission: 9,
+  'Truck parts': 10
+};
+
+const categoryNames = [...new Set(products.map((product) => product.category))].sort((first, second) => {
+  const firstOrder = categoryOrder[first] ?? 99;
+  const secondOrder = categoryOrder[second] ?? 99;
+  return firstOrder - secondOrder || first.localeCompare(second);
+});
 categoryNames.forEach((category) => {
   const option = document.createElement('option');
   option.value = category;
@@ -401,6 +420,44 @@ function addRequestToCart(requestName) {
   cart[key] = (cart[key] || 0) + 1;
   updateQuoteTray();
   renderProducts(getFilteredProducts());
+}
+
+function renderFeaturedGallery() {
+  if (!featuredGallery) return;
+
+  const featuredItems = newlyAddedProductImages.slice(0, 7);
+  featuredGallery.innerHTML = featuredItems.map((product) => `
+    <article class="product-card featured-card">
+      <figure>
+        <button class="product-image-button" type="button" aria-label="View larger photo of ${product.name}">
+          <img src="${product.image}" alt="${product.name}" />
+        </button>
+      </figure>
+      <div class="product-body">
+        <p class="product-brand">${product.category}</p>
+        <h3 class="product-name">${product.name}</h3>
+        <div class="product-meta">
+          <span class="product-tag">${product.tag}</span>
+          <button class="quote-button" type="button" data-featured-add="${product.image}" aria-pressed="${Boolean(cart[product.image])}">
+            ${cart[product.image] ? 'In cart' : 'Add to cart'}
+          </button>
+        </div>
+      </div>
+    </article>
+  `).join('');
+
+  featuredGallery.querySelectorAll('.product-image-button').forEach((button) => {
+    button.addEventListener('click', (event) => {
+      openLightbox(event.currentTarget.querySelector('img'));
+    });
+  });
+
+  featuredGallery.querySelectorAll('[data-featured-add]').forEach((button) => {
+    button.addEventListener('click', () => {
+      toggleCartItem(button.dataset.featuredAdd);
+      renderFeaturedGallery();
+    });
+  });
 }
 
 function renderProducts(filteredProducts) {
@@ -490,7 +547,11 @@ function getFilteredProducts() {
   if (sortFilter.value === 'name') {
     filtered.sort((first, second) => first.name.localeCompare(second.name));
   } else if (sortFilter.value === 'category') {
-    filtered.sort((first, second) => first.category.localeCompare(second.category));
+    filtered.sort((first, second) => {
+      const firstOrder = categoryOrder[first.category] ?? 99;
+      const secondOrder = categoryOrder[second.category] ?? 99;
+      return firstOrder - secondOrder || first.name.localeCompare(second.name);
+    });
   }
 
   return filtered;
@@ -574,4 +635,5 @@ document.addEventListener('keydown', (event) => {
 });
 
 updateQuoteTray();
+renderFeaturedGallery();
 renderProducts(products);
